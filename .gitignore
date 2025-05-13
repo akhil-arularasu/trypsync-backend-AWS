@@ -1,0 +1,13 @@
+backend/instance/
+backend/__pycache__
+backend/venv
+backend/migrations/
+backend/rides.sqlite3
+backend/.env
+
+
+
+infra/instance/
+infra/__pycache__
+infra/.venv
+infra/cdk.out
