@@ -1,14 +1,35 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
-from ecs_fargate_rds_stack import TrypSyncFargateRDSStack
-from pipeline_stack import TrypSyncPipelineStack
+
+from app_cdk.app_cdk_stack import AppCdkStack
+from app_cdk.pipeline_cdk_stack import PipelineCdkStack
+from app_cdk.ecr_cdk_stack import EcrCdkStack
 
 app = cdk.App()
 
-# Add your AWS account ID and region below
-env = cdk.Environment(account="058264196609", region="us-east-1")
+ecr_stack = EcrCdkStack(
+    app,
+    'ecr-stack'
+)
 
-TrypSyncFargateRDSStack(app, "TrypSyncFargateRDSStack", env=env)
-TrypSyncPipelineStack(app, "TrypSyncPipelineStack", env=env)
+test_app_stack = AppCdkStack(
+    app,
+    'test-app-stack',
+    ecr_repository = ecr_stack.ecr_data
+)
+
+prod_app_stack = AppCdkStack(
+    app,
+    'prod-app-stack',
+    ecr_repository = ecr_stack.ecr_data
+)
+
+pipeline_stack = PipelineCdkStack(
+    app,
+    'pipeline-stack',
+    ecr_repository = ecr_stack.ecr_data,
+    test_app_fargate = test_app_stack.ecs_service_data,
+    prod_app_fargate = prod_app_stack.ecs_service_data,
+)
 
 app.synth()
