@@ -15,31 +15,32 @@ class PipelineCdkStack(Stack):
     def __init__(self, scope: Construct, id: str, ecr_repository, test_app_fargate, prod_app_fargate, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Creates a CodeCommit repository called 'CICD_Lab'
-        repo = codecommit.Repository(
-            self, 'CICD_Lab',
-            repository_name = 'CICD_Lab',
-            description = 'Repository for my application code and infrastructure'
+
+        connection_arn = "arn:aws:codestar-connections:us-east-1:058264196609:connection/cba985e5-5b1f-411d-9ada-22c74e7c9680"
+        github_owner = "akhil-arularasu"
+        github_repo = "trypsync-backend-aws"
+        github_branch = "main"
+
+        # Artifact for pipeline output
+        source_output = codepipeline.Artifact()
+
+        # GitHub source action
+        source_action = codepipeline_actions.CodeStarConnectionsSourceAction(
+            action_name="GitHub_Source",
+            owner=github_owner,
+            repo=github_repo,
+            branch=github_branch,
+            connection_arn=connection_arn,
+            output=source_output
         )
 
-        pipeline = codepipeline.Pipeline(
-            self, 'CICD_Pipeline',
-            cross_account_keys = False
-        )
+        pipeline = codepipeline.Pipeline(self, "Trypsync-Pipeline",)
+        pipeline.add_stage(stage_name="Source", actions=[source_action])
 
-        code_quality_build = codebuild.PipelineProject(
-            self, 'Code Quality',
-            build_spec = codebuild.BuildSpec.from_source_filename('./buildspec_test.yml'),
-            environment = codebuild.BuildEnvironment(
-                build_image = codebuild.LinuxBuildImage.STANDARD_5_0,
-                privileged = True,
-                compute_type = codebuild.ComputeType.LARGE,
-            ),
-        )
 
         docker_build_project = codebuild.PipelineProject(
             self, 'Docker Build',
-            build_spec = codebuild.BuildSpec.from_source_filename('./buildspec_docker.yml'),
+            build_spec = codebuild.BuildSpec.from_source_filename('./buildspec.yml'),
             environment = codebuild.BuildEnvironment(
                 build_image = codebuild.LinuxBuildImage.STANDARD_5_0,
                 privileged = True,
@@ -81,32 +82,7 @@ class PipelineCdkStack(Stack):
         ))
 
         source_output = codepipeline.Artifact()
-        unit_test_output = codepipeline.Artifact()
         docker_build_output = codepipeline.Artifact()
-
-        source_action = codepipeline_actions.CodeCommitSourceAction(
-            action_name = 'CodeCommit',
-            repository = repo,
-            output = source_output,
-            branch = 'main'
-        )
-
-        pipeline.add_stage(
-            stage_name = 'Source',
-            actions = [source_action]
-        )
-
-        build_action = codepipeline_actions.CodeBuildAction(
-            action_name = 'Unit-Test',
-            project = code_quality_build,
-            input = source_output,  # The build action must use the CodeCommitSourceAction output as input.
-            outputs = [unit_test_output]
-        )
-
-        pipeline.add_stage(
-            stage_name = 'Code-Quality-Testing',
-            actions = [build_action]
-        )
 
         docker_build_action = codepipeline_actions.CodeBuildAction(
             action_name = 'Docker-Build',
@@ -116,7 +92,7 @@ class PipelineCdkStack(Stack):
         )
 
         pipeline.add_stage(
-            stage_name = 'Docker-Push-ECR',
+            stage_name = 'Docker-Build',
             actions = [docker_build_action]
         )
 
@@ -148,6 +124,6 @@ class PipelineCdkStack(Stack):
         )
 
         CfnOutput(
-            self, 'CodeCommitRepositoryUrl',
-            value = repo.repository_clone_url_http
+            self, 'GitHubRepoUrl',
+            value=f"https://github.com/akhil-arularasu/trypsync-backend-aws"
         )
