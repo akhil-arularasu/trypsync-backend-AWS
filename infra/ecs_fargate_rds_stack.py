@@ -14,8 +14,8 @@ class TrypSyncFargateRDSStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs):
         super().__init__(scope, construct_id, **kwargs)
 
-        # Use default VPC
-        vpc = ec2.Vpc.from_lookup(self, "DefaultVPC", is_default=True)
+        vpc = ec2.Vpc(self, "TrypSyncVPC", max_azs=2)
+
 
         # ECS Cluster
         cluster = ecs.Cluster(self, "TrypSyncCluster", vpc=vpc)
