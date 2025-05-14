@@ -27,7 +27,7 @@ class AppCdkStack(Stack):
             vpc = vpc
         )
 
-        
+        '''
         # Secret for RDS credentials
         db_secret = secretsmanager.Secret(self, "DBCredentialsSecret",
             generate_secret_string=secretsmanager.SecretStringGenerator(
@@ -40,9 +40,9 @@ class AppCdkStack(Stack):
         # RDS PostgreSQL Instance
         db_instance = rds.DatabaseInstance(
             self, "TrypSyncPostgres",
-            engine=rds.DatabaseInstanceEngine.postgres(version=rds.PostgresEngineVersion.VER_14_8),
+            engine=rds.DatabaseInstanceEngine.postgres(version=rds.PostgresEngineVersion.VER_15),
             instance_type=ec2.InstanceType.of(
-                ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO
+                ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM
             ),
             vpc=vpc,
             credentials=rds.Credentials.from_secret(db_secret),
@@ -56,8 +56,8 @@ class AppCdkStack(Stack):
 
         # Allow ECS service to connect to DB
         db_instance.connections.allow_default_port_from_any_ipv4("Allow from anywhere")  # or restrict to VPC later
-
-
+        db_instance.connections.allow_from(ecs_cluster, ec2.Port.tcp(5432), "Allow ECS to connect to DB")
+        '''
         service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self,
             "TrypSyncFargateService",
@@ -68,18 +68,11 @@ class AppCdkStack(Stack):
             public_load_balancer=True,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
                 image=ecs.ContainerImage.from_ecr_repository(ecr_repository),
-                container_port=5000,
-                environment={
-                    "PORT": "5000",
-                    "DB_HOST": db_instance.db_instance_endpoint_address,
-                    "DB_PORT": db_instance.db_instance_endpoint_port,
-                    "DB_NAME": "trypsyncdb",
-                    "DB_USER": db_secret.secret_value_from_json("username").unsafe_unwrap(),
-                    "DB_PASSWORD": db_secret.secret_value_from_json("password").unsafe_unwrap()
-                }
+                container_port=8081,
+                container_name="trypsync-backend"
             )
         )
-
+        
         service.target_group.configure_health_check(
             healthy_threshold_count = 2,
             unhealthy_threshold_count = 2,

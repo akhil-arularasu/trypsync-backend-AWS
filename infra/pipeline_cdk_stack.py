@@ -37,7 +37,6 @@ class PipelineCdkStack(Stack):
         pipeline = codepipeline.Pipeline(self, "Trypsync-Pipeline",)
         pipeline.add_stage(stage_name="Source", actions=[source_action])
 
-
         docker_build_project = codebuild.PipelineProject(
             self, 'Docker Build',
             build_spec = codebuild.BuildSpec.from_source_filename('./buildspec.yml'),
@@ -81,7 +80,6 @@ class PipelineCdkStack(Stack):
             resources = ['*'],
         ))
 
-        source_output = codepipeline.Artifact()
         docker_build_output = codepipeline.Artifact()
 
         docker_build_action = codepipeline_actions.CodeBuildAction(
@@ -106,7 +104,7 @@ class PipelineCdkStack(Stack):
                 )
             ]
         )
-
+        '''
         pipeline.add_stage(
             stage_name = 'Deploy-Production',
             actions = [
@@ -122,7 +120,7 @@ class PipelineCdkStack(Stack):
                 )
             ]
         )
-
+        '''
         CfnOutput(
             self, 'GitHubRepoUrl',
             value=f"https://github.com/akhil-arularasu/trypsync-backend-aws"

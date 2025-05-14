@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
 
-from app_cdk.app_cdk_stack import AppCdkStack
-from app_cdk.pipeline_cdk_stack import PipelineCdkStack
-from app_cdk.ecr_cdk_stack import EcrCdkStack
+from app_cdk_stack import AppCdkStack
+from pipeline_cdk_stack import PipelineCdkStack
+from ecr_cdk_stack import EcrCdkStack
 
 app = cdk.App()
 
