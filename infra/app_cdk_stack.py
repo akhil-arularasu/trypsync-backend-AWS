@@ -18,6 +18,9 @@ class AppCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, ecr_repository, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        print('in app stack')
+
+
         vpc = ec2.Vpc(
             self, 'TrypSyncVPC'
         )
@@ -65,7 +68,7 @@ class AppCdkStack(Stack):
             cpu=256,
             desired_count=1,
             memory_limit_mib=512,
-            public_load_balancer=True,
+           # public_load_balancer=True,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
                 image=ecs.ContainerImage.from_ecr_repository(ecr_repository),
                 container_port=8081,
@@ -79,8 +82,7 @@ class AppCdkStack(Stack):
             timeout = Duration.seconds(10),
             interval = Duration.seconds(11)
         )
-
+        
         service.target_group.set_attribute('deregistration_delay.timeout_seconds', '5')
 
         self.service = service
-

@@ -14,11 +14,12 @@ class PipelineCdkStack(Stack):
 
     def __init__(self, scope: Construct, id: str, ecr_repository, test_app_fargate, prod_app_fargate, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-
+        
+        print('in pipeline stack')
 
         connection_arn = "arn:aws:codestar-connections:us-east-1:058264196609:connection/cba985e5-5b1f-411d-9ada-22c74e7c9680"
         github_owner = "akhil-arularasu"
-        github_repo = "trypsync-backend-aws"
+        github_repo = "trypsync-backend-AWS"
         github_branch = "main"
 
         # Artifact for pipeline output
@@ -94,6 +95,7 @@ class PipelineCdkStack(Stack):
             actions = [docker_build_action]
         )
 
+        '''
         pipeline.add_stage(
             stage_name = 'Deploy-Test',
             actions = [
@@ -104,7 +106,6 @@ class PipelineCdkStack(Stack):
                 )
             ]
         )
-        '''
         pipeline.add_stage(
             stage_name = 'Deploy-Production',
             actions = [
