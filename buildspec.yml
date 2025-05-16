@@ -14,7 +14,8 @@ phases:
   build:
     commands:
       - echo Building Docker image...
-      - docker build -t $REPO_URI:$IMAGE_TAG ./backend
+      - cd backend
+      - docker build -t $REPO_URI:$IMAGE_TAG -f dockerfile .
   post_build:
     commands:
       - echo Pushing Docker image...
