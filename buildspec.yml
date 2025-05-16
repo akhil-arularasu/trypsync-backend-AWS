@@ -1,12 +1,16 @@
 version: 0.2
 
+env:
+  variables:
+    REPO_URI: 058264196609.dkr.ecr.us-east-1.amazonaws.com/trypsync-backend
+
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 058264196609.dkr.ecr.us-east-1.amazonaws.com
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPO_URI
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - REPO_URI=058264196609.dkr.ecr.us-east-1.amazonaws.com/trypsync-backend
+      - echo IMAGE_TAG=$IMAGE_TAG
   build:
     commands:
       - echo Building Docker image...
@@ -15,6 +19,6 @@ phases:
     commands:
       - echo Pushing Docker image...
       - docker push $REPO_URI:$IMAGE_TAG
+
 artifacts:
   files: '**/*'
-
